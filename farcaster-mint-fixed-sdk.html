@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mint Farcaster PRO Mascot</title>
+    <script type="module">
+      import { ThirdwebSDK } from "https://cdn.skypack.dev/@thirdweb-dev/sdk";
+      import { ethers } from "https://cdn.skypack.dev/ethers";
+
+      window.onload = async () => {
+        const connectButton = document.getElementById("connectButton");
+        const mintButton = document.getElementById("mintButton");
+        const supplyInfo = document.getElementById("supply-info");
+
+        let sdk, contract, signer;
+
+        connectButton.onclick = async () => {
+          if (!window.ethereum) {
+            alert("Please install MetaMask.");
+            return;
+          }
+
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          signer = await provider.getSigner();
+          sdk = ThirdwebSDK.fromSigner(signer, "base");
+
+          contract = await sdk.getContract("0x83d7a49C3fA5771FC83843d1fF1C783A947c12AF", "edition-drop");
+
+          const total = await contract.erc1155.totalSupply(0);
+          const claimed = await contract.erc1155.totalClaimedSupply(0);
+
+          supplyInfo.innerText = `${claimed.displayValue} / ${total.displayValue} minted`;
+
+          mintButton.disabled = false;
+        };
+
+        mintButton.onclick = async () => {
+          try {
+            await contract.erc1155.claim(0, 1);
+            alert("Mint successful!");
+          } catch (err) {
+            alert("Mint failed: " + err.message);
+          }
+        };
+      };
+    </script>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        padding: 40px;
+        background: #f8f5f0;
+      }
+      img {
+        width: 300px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+      }
+      button {
+        background: #8247e5;
+        border: none;
+        color: white;
+        font-size: 18px;
+        padding: 15px 30px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 10px;
+      }
+      #mintButton:disabled {
+        background: #bbb;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Farcaster PRO Mascot</h1>
+    <img src="https://nftstorage.link/ipfs/QmPTiPH42NJ7YW61ND9aFmRCrGq45HcX7PAhWpcyGm63Eg/0.png" alt="Farcaster Mascot" />
+    <p>100 editions · 0.005 ETH · on Base</p>
+    <p id="supply-info">Connect wallet to load supply info</p>
+    <button id="connectButton">Connect Wallet</button>
+    <button id="mintButton" disabled>Mint</button>
+  </body>
+</html>
