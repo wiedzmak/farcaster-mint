@@ -2,19 +2,21 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Mint Farcaster PRO Mascot</title>
+    <title>Farcaster PRO Mascot Mint</title>
+    <meta charset="UTF-8" />
     <script type="module">
-      import { ThirdwebSDK } from "https://cdn.skypack.dev/@thirdweb-dev/sdk";
-      import { ethers } from "https://cdn.skypack.dev/ethers";
+      import { ThirdwebSDK } from "https://unpkg.com/@thirdweb-dev/sdk@3.15.12";
+      import { ConnectWallet } from "https://unpkg.com/@thirdweb-dev/react@3.15.12/evm";
+      import { ethers } from "https://esm.sh/ethers@6.7.0";
 
       window.onload = async () => {
-        const connectButton = document.getElementById("connectButton");
-        const mintButton = document.getElementById("mintButton");
-        const supplyInfo = document.getElementById("supply-info");
+        const connectBtn = document.getElementById("connect");
+        const mintBtn = document.getElementById("mint");
+        const supplyInfo = document.getElementById("supply");
 
         let sdk, contract, signer;
 
-        connectButton.onclick = async () => {
+        connectBtn.onclick = async () => {
           if (!window.ethereum) {
             alert("Please install MetaMask.");
             return;
@@ -31,13 +33,13 @@
 
           supplyInfo.innerText = `${claimed.displayValue} / ${total.displayValue} minted`;
 
-          mintButton.disabled = false;
+          mintBtn.disabled = false;
         };
 
-        mintButton.onclick = async () => {
+        mintBtn.onclick = async () => {
           try {
             await contract.erc1155.claim(0, 1);
-            alert("Mint successful!");
+            alert("🎉 Mint successful!");
           } catch (err) {
             alert("Mint failed: " + err.message);
           }
@@ -47,9 +49,9 @@
     <style>
       body {
         font-family: sans-serif;
+        background: #f8f5f0;
         text-align: center;
         padding: 40px;
-        background: #f8f5f0;
       }
       img {
         width: 300px;
@@ -58,26 +60,26 @@
       }
       button {
         background: #8247e5;
-        border: none;
         color: white;
+        padding: 12px 24px;
         font-size: 18px;
-        padding: 15px 30px;
         border-radius: 8px;
+        border: none;
         cursor: pointer;
         margin: 10px;
       }
-      #mintButton:disabled {
-        background: #bbb;
+      #mint:disabled {
+        background: #aaa;
         cursor: not-allowed;
       }
     </style>
   </head>
   <body>
     <h1>Farcaster PRO Mascot</h1>
-    <img src="https://nftstorage.link/ipfs/QmPTiPH42NJ7YW61ND9aFmRCrGq45HcX7PAhWpcyGm63Eg/0.png" alt="Farcaster Mascot" />
+    <img src="https://nftstorage.link/ipfs/QmPTiPH42NJ7YW61ND9aFmRCrGq45HcX7PAhWpcyGm63Eg/0.png" alt="NFT image"/>
     <p>100 editions · 0.005 ETH · on Base</p>
-    <p id="supply-info">Connect wallet to load supply info</p>
-    <button id="connectButton">Connect Wallet</button>
-    <button id="mintButton" disabled>Mint</button>
+    <p id="supply">Connect wallet to see supply</p>
+    <button id="connect">Connect Wallet</button>
+    <button id="mint" disabled>Mint</button>
   </body>
 </html>
