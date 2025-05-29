@@ -1,80 +1,88 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Farcaster PRO Mascot Mint</title>
     <meta charset="UTF-8" />
-    <script src="https://unpkg.com/@thirdweb-dev/wallets@latest/dist/wallets.umd.min.js"></script>
-    <script src="https://unpkg.com/@thirdweb-dev/sdk@latest/dist/sdk.umd.js"></script>
+    <title>Farcaster PRO Mascot</title>
+    <script src="https://unpkg.com/@thirdweb-dev/sdk@latest/dist/browser.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
       body {
         font-family: sans-serif;
-        background: #f8f5f0;
         text-align: center;
+        background: #fefdf9;
         padding: 40px;
       }
-      img {
-        width: 300px;
-        border-radius: 16px;
-        margin-bottom: 20px;
-      }
       button {
-        background: #8247e5;
-        color: white;
         padding: 12px 24px;
-        font-size: 18px;
-        border-radius: 8px;
         border: none;
+        border-radius: 8px;
+        background-color: #8b5cf6;
+        color: white;
+        font-size: 16px;
+        margin-top: 20px;
         cursor: pointer;
-        margin: 10px;
       }
-      #mintButton:disabled {
-        background: #aaa;
-        cursor: not-allowed;
+      button:disabled {
+        background-color: #aaa;
+      }
+      img {
+        border-radius: 20px;
+        margin-top: 20px;
+        max-width: 300px;
       }
     </style>
   </head>
   <body>
     <h1>Farcaster PRO Mascot</h1>
-    <img src="https://nftstorage.link/ipfs/QmPTiPH42NJ7YW61ND9aFmRCrGq45HcX7PAhWpcyGm63Eg/0.png" alt="NFT image"/>
+    <img src="farcaster-nft.png" alt="NFT" />
     <p>100 editions · 0.005 ETH · on Base</p>
     <p id="status">Connect wallet to begin</p>
     <button id="connectButton">Connect Wallet</button>
     <button id="mintButton" disabled>Mint</button>
 
     <script>
+      const contractAddress = "0x83d7a49C3fA5771FC83843d1fF1C783A947c12AF";
+      const tokenId = 0;
+      const quantity = 1;
+      const chainId = 8453; // Base mainnet
+
+      let signer, contract;
+
+      const status = document.getElementById("status");
       const connectButton = document.getElementById("connectButton");
       const mintButton = document.getElementById("mintButton");
-      const status = document.getElementById("status");
-
-      let sdk, contract;
 
       connectButton.onclick = async () => {
-        try {
-          const wallet = new window.tw.MetamaskWallet();
-          await wallet.connect({ chainId: 8453 }); // Base Mainnet
-          const signer = await wallet.getSigner();
-
-          sdk = window.tw.ThirdwebSDK.fromSigner(signer, "base");
-
-          contract = await sdk.getContract("0x83d7a49C3fA5771FC83843d1fF1C783A947c12AF", "edition-drop");
-
-          const total = await contract.erc1155.totalSupply(0);
-          const claimed = await contract.erc1155.totalClaimedSupply(0);
-
-          status.innerText = `${claimed.displayValue} / ${total.displayValue} minted`;
-          mintButton.disabled = false;
-        } catch (err) {
-          alert("Wallet connection failed: " + err.message);
+        if (typeof window.ethereum === "undefined") {
+          alert("Please install MetaMask!");
+          return;
         }
+
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+
+        const network = await provider.getNetwork();
+        if (network.chainId !== chainId) {
+          alert("Please switch to the Base network.");
+          return;
+        }
+
+        const sdk = new thirdweb.ThirdwebSDK(signer);
+        contract = await sdk.getEditionDrop(contractAddress);
+
+        status.innerText = "Wallet connected ✅";
+        mintButton.disabled = false;
       };
 
       mintButton.onclick = async () => {
         try {
-          await contract.erc1155.claim(0, 1);
-          alert("🎉 Mint successful!");
+          status.innerText = "Minting...";
+          await contract.claim(tokenId, quantity);
+          status.innerText = "Minted successfully! 🎉";
         } catch (err) {
-          alert("Mint failed: " + err.message);
+          console.error(err);
+          status.innerText = "Mint failed. See console.";
         }
       };
     </script>
