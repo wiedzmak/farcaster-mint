@@ -4,48 +4,8 @@
   <head>
     <title>Farcaster PRO Mascot Mint</title>
     <meta charset="UTF-8" />
-    <script type="module">
-      import { ThirdwebSDK } from "https://unpkg.com/@thirdweb-dev/sdk@3.15.12";
-      import { ConnectWallet } from "https://unpkg.com/@thirdweb-dev/react@3.15.12/evm";
-      import { ethers } from "https://esm.sh/ethers@6.7.0";
-
-      window.onload = async () => {
-        const connectBtn = document.getElementById("connect");
-        const mintBtn = document.getElementById("mint");
-        const supplyInfo = document.getElementById("supply");
-
-        let sdk, contract, signer;
-
-        connectBtn.onclick = async () => {
-          if (!window.ethereum) {
-            alert("Please install MetaMask.");
-            return;
-          }
-
-          const provider = new ethers.BrowserProvider(window.ethereum);
-          signer = await provider.getSigner();
-          sdk = ThirdwebSDK.fromSigner(signer, "base");
-
-          contract = await sdk.getContract("0x83d7a49C3fA5771FC83843d1fF1C783A947c12AF", "edition-drop");
-
-          const total = await contract.erc1155.totalSupply(0);
-          const claimed = await contract.erc1155.totalClaimedSupply(0);
-
-          supplyInfo.innerText = `${claimed.displayValue} / ${total.displayValue} minted`;
-
-          mintBtn.disabled = false;
-        };
-
-        mintBtn.onclick = async () => {
-          try {
-            await contract.erc1155.claim(0, 1);
-            alert("🎉 Mint successful!");
-          } catch (err) {
-            alert("Mint failed: " + err.message);
-          }
-        };
-      };
-    </script>
+    <script src="https://unpkg.com/@thirdweb-dev/wallets@latest/dist/wallets.umd.min.js"></script>
+    <script src="https://unpkg.com/@thirdweb-dev/sdk@latest/dist/sdk.umd.js"></script>
     <style>
       body {
         font-family: sans-serif;
@@ -68,7 +28,7 @@
         cursor: pointer;
         margin: 10px;
       }
-      #mint:disabled {
+      #mintButton:disabled {
         background: #aaa;
         cursor: not-allowed;
       }
@@ -78,8 +38,45 @@
     <h1>Farcaster PRO Mascot</h1>
     <img src="https://nftstorage.link/ipfs/QmPTiPH42NJ7YW61ND9aFmRCrGq45HcX7PAhWpcyGm63Eg/0.png" alt="NFT image"/>
     <p>100 editions · 0.005 ETH · on Base</p>
-    <p id="supply">Connect wallet to see supply</p>
-    <button id="connect">Connect Wallet</button>
-    <button id="mint" disabled>Mint</button>
+    <p id="status">Connect wallet to begin</p>
+    <button id="connectButton">Connect Wallet</button>
+    <button id="mintButton" disabled>Mint</button>
+
+    <script>
+      const connectButton = document.getElementById("connectButton");
+      const mintButton = document.getElementById("mintButton");
+      const status = document.getElementById("status");
+
+      let sdk, contract;
+
+      connectButton.onclick = async () => {
+        try {
+          const wallet = new window.tw.MetamaskWallet();
+          await wallet.connect({ chainId: 8453 }); // Base Mainnet
+          const signer = await wallet.getSigner();
+
+          sdk = window.tw.ThirdwebSDK.fromSigner(signer, "base");
+
+          contract = await sdk.getContract("0x83d7a49C3fA5771FC83843d1fF1C783A947c12AF", "edition-drop");
+
+          const total = await contract.erc1155.totalSupply(0);
+          const claimed = await contract.erc1155.totalClaimedSupply(0);
+
+          status.innerText = `${claimed.displayValue} / ${total.displayValue} minted`;
+          mintButton.disabled = false;
+        } catch (err) {
+          alert("Wallet connection failed: " + err.message);
+        }
+      };
+
+      mintButton.onclick = async () => {
+        try {
+          await contract.erc1155.claim(0, 1);
+          alert("🎉 Mint successful!");
+        } catch (err) {
+          alert("Mint failed: " + err.message);
+        }
+      };
+    </script>
   </body>
 </html>
